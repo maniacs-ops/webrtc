@@ -8,6 +8,7 @@ import (
 
 	"github.com/pion/ice"
 	"github.com/pion/logging"
+	"github.com/pion/sdp/v2"
 	"github.com/pion/transport/vnet"
 )
 
@@ -48,6 +49,7 @@ type SettingEngine struct {
 		SRTP  *uint
 		SRTCP *uint
 	}
+	sdpExtensions                             []sdp.ExtMap
 	answeringDTLSRole                         DTLSRole
 	disableCertificateFingerprintVerification bool
 	disableSRTPReplayProtection               bool
@@ -238,4 +240,9 @@ func (e *SettingEngine) DisableSRTPReplayProtection(isDisabled bool) {
 // DisableSRTCPReplayProtection disables SRTCP replay protection.
 func (e *SettingEngine) DisableSRTCPReplayProtection(isDisabled bool) {
 	e.disableSRTCPReplayProtection = isDisabled
+}
+
+// SetSDPExtensions sets available and offered extensions.
+func (e *SettingEngine) SetSDPExtensions(exts []sdp.ExtMap) {
+	e.sdpExtensions = exts
 }
