@@ -49,7 +49,7 @@ type SettingEngine struct {
 		SRTP  *uint
 		SRTCP *uint
 	}
-	sdpExtensions                             []sdp.ExtMap
+	sdpExtensions                             map[string][]sdp.ExtMap
 	answeringDTLSRole                         DTLSRole
 	disableCertificateFingerprintVerification bool
 	disableSRTPReplayProtection               bool
@@ -242,7 +242,13 @@ func (e *SettingEngine) DisableSRTCPReplayProtection(isDisabled bool) {
 	e.disableSRTCPReplayProtection = isDisabled
 }
 
-// SetSDPExtensions sets available and offered extensions.
-func (e *SettingEngine) SetSDPExtensions(exts []sdp.ExtMap) {
-	e.sdpExtensions = exts
+// AddSDPExtensions adds available and offered extensions for media type.
+func (e *SettingEngine) AddSDPExtensions(mediaType string, exts []sdp.ExtMap) {
+	if e.sdpExtensions == nil {
+		e.sdpExtensions = make(map[string][]sdp.ExtMap)
+	}
+	if _, ok := e.sdpExtensions[mediaType]; !ok {
+		e.sdpExtensions[mediaType] = []sdp.ExtMap{}
+	}
+	e.sdpExtensions[mediaType] = append(e.sdpExtensions[mediaType], exts...)
 }
