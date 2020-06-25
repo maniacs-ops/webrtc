@@ -6,7 +6,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/pion/ice"
+	"github.com/pion/ice/v2"
 	"github.com/pion/logging"
 )
 
@@ -85,13 +85,13 @@ func (g *ICEGatherer) createAgent() error {
 	}
 
 	config := &ice.AgentConfig{
-		Trickle:                   g.api.settingEngine.candidates.ICETrickle,
 		Lite:                      g.api.settingEngine.candidates.ICELite,
 		Urls:                      g.validatedServers,
 		PortMin:                   g.api.settingEngine.ephemeralUDP.PortMin,
 		PortMax:                   g.api.settingEngine.ephemeralUDP.PortMax,
-		ConnectionTimeout:         g.api.settingEngine.timeout.ICEConnection,
-		KeepaliveInterval:         g.api.settingEngine.timeout.ICEKeepalive,
+		DisconnectedTimeout:       g.api.settingEngine.timeout.ICEDisconnectedTimeout,
+		FailedTimeout:             g.api.settingEngine.timeout.ICEFailedTimeout,
+		KeepaliveInterval:         g.api.settingEngine.timeout.ICEKeepaliveInterval,
 		LoggerFactory:             g.api.settingEngine.LoggerFactory,
 		CandidateTypes:            candidateTypes,
 		CandidateSelectionTimeout: g.api.settingEngine.timeout.ICECandidateSelectionTimeout,
@@ -124,10 +124,6 @@ func (g *ICEGatherer) createAgent() error {
 	}
 
 	g.agent = agent
-	if !g.api.settingEngine.candidates.ICETrickle {
-		atomicStoreICEGathererState(&g.state, ICEGathererStateComplete)
-	}
-
 	return nil
 }
 
@@ -143,13 +139,8 @@ func (g *ICEGatherer) Gather() error {
 	}
 
 	g.lock.Lock()
-	isTrickle := g.api.settingEngine.candidates.ICETrickle
 	agent := g.agent
 	g.lock.Unlock()
-
-	if !isTrickle {
-		return nil
-	}
 
 	g.setState(ICEGathererStateGathering)
 	if err := agent.OnCandidate(func(candidate ice.Candidate) {
@@ -243,32 +234,6 @@ func (g *ICEGatherer) getAgent() *ice.Agent {
 	g.lock.RLock()
 	defer g.lock.RUnlock()
 	return g.agent
-}
-
-// SignalCandidates imitates gathering process to backward support old trickle
-// false behavior.
-func (g *ICEGatherer) SignalCandidates() error {
-	candidates, err := g.GetLocalCandidates()
-	if err != nil {
-		return err
-	}
-
-	var onLocalCandidateHdlr func(*ICECandidate)
-	if hdlr, ok := g.onLocalCandidateHdlr.Load().(func(candidate *ICECandidate)); ok {
-		onLocalCandidateHdlr = hdlr
-	}
-
-	if onLocalCandidateHdlr != nil {
-		go func() {
-			for i := range candidates {
-				onLocalCandidateHdlr(&candidates[i])
-			}
-			// Call the handler one last time with nil. This is a signal that candidate
-			// gathering is complete.
-			onLocalCandidateHdlr(nil)
-		}()
-	}
-	return nil
 }
 
 func (g *ICEGatherer) collectStats(collector *statsReportCollector) {

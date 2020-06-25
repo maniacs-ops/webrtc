@@ -50,14 +50,8 @@ func main() {
 		},
 	}
 
-	// Create a new API with Trickle ICE enabled
-	// This SettingEngine allows non-standard WebRTC behavior
-	s := webrtc.SettingEngine{}
-	s.SetTrickle(true)
-	api := webrtc.NewAPI(webrtc.WithSettingEngine(s))
-
 	// Create a new RTCPeerConnection
-	peerConnection, err := api.NewPeerConnection(config)
+	peerConnection, err := webrtc.NewPeerConnection(config)
 	if err != nil {
 		panic(err)
 	}
