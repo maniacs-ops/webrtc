@@ -248,7 +248,7 @@ func TestPeerConnection_GetConfiguration(t *testing.T) {
 	assert.Equal(t, expected.BundlePolicy, actual.BundlePolicy)
 	assert.Equal(t, expected.RTCPMuxPolicy, actual.RTCPMuxPolicy)
 	// TODO(albrow): Uncomment this after #513 is fixed.
-	// See: https://github.com/pion/webrtc/v2/issues/513.
+	// See: https://github.com/pion/webrtc/issues/513.
 	// assert.Equal(t, len(expected.Certificates), len(actual.Certificates))
 	assert.Equal(t, expected.ICECandidatePoolSize, actual.ICECandidatePoolSize)
 }
@@ -532,10 +532,6 @@ func TestSDPIncludesExtIfSet(t *testing.T) {
 		{SDP: extSDPTestStr, Contains: false},
 	}
 
-	// Create new api
-	// Add extmaps to video
-	// Use api to create PC
-
 	transportCCURL, _ := url.Parse(sdp.TransportCCURI)
 	absSendURL, _ := url.Parse(sdp.ABSSendTimeURI)
 
@@ -543,14 +539,10 @@ func TestSDPIncludesExtIfSet(t *testing.T) {
 		{
 			Value: sdp.DefExtMapValueTransportCC,
 			URI:   transportCCURL,
-			// support both send and recv direction
-			Direction: 0,
 		},
 		{
 			Value: sdp.DefExtMapValueABSSendTime,
 			URI:   absSendURL,
-			// support both send and recv direction
-			Direction: 0,
 		},
 	}
 

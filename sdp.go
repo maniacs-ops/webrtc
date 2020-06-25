@@ -245,7 +245,6 @@ func addTransceiverSDP(d *sdp.SessionDescription, isPlanB bool, mediaEngine *Med
 	}
 
 	// Add extmaps
-	fmt.Printf("Type %v", t.kind.String())
 	if maps, ok := extMaps[t.kind.String()]; ok {
 		for _, m := range maps {
 			// TODO check direction
@@ -452,7 +451,7 @@ func answerExtMaps(remoteExtMaps map[string]map[int]sdp.ExtMap, localMaps map[st
 			ret[mediaType] = []sdp.ExtMap{}
 		}
 		for _, extItem := range remoteExtMap {
-			// update existing locally provided value
+			// add remote ext that match locally available ones
 			for _, extMap := range localMaps[mediaType] {
 				if extMap.URI.String() == extItem.URI.String() {
 					ret[mediaType] = append(ret[mediaType], extItem)
@@ -463,8 +462,7 @@ func answerExtMaps(remoteExtMaps map[string]map[int]sdp.ExtMap, localMaps map[st
 	return ret
 }
 
-// Maybe pass in remote description instead of living on PC
-func remoteExts(log logging.LeveledLogger, descriptions []*sdp.MediaDescription) (map[string]map[int]sdp.ExtMap, error) {
+func remoteExts(descriptions []*sdp.MediaDescription) (map[string]map[int]sdp.ExtMap, error) {
 	remoteExtMaps := map[string]map[int]sdp.ExtMap{}
 
 	// populate the extmaps from the current remote description
@@ -480,8 +478,7 @@ func remoteExts(log logging.LeveledLogger, descriptions []*sdp.MediaDescription)
 			}
 			em := &sdp.ExtMap{}
 			if err := em.Unmarshal("extmap:" + attr.Value); err != nil {
-				log.Warnf("Failed to parse ExtMap: %v", err)
-				continue
+				return nil, fmt.Errorf("Failed to parse ExtMap: %v", err)
 			}
 			if remoteExtMap, ok := remoteExtMaps[mediaType][em.Value]; ok {
 				if remoteExtMap.Value != em.Value {
